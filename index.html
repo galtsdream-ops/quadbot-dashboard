@@ -205,6 +205,85 @@
             </table>
         </div>
 
+        <!-- TP Hit Rate Analysis -->
+        <div class="section">
+            <h2>Take Profit Hit Rates</h2>
+            <p style="color: #888; margin-bottom: 15px;">Analyse van 202 trades | Hoeveel trades bereikten elke TP level?</p>
+
+            <div class="stats-row">
+                <div class="stat-box" style="border-left: 4px solid #00ff88;">
+                    <div class="value green">94.8%</div>
+                    <div class="label">TP1 (0.4×BB)</div>
+                    <div style="font-size: 0.75em; color: #666; margin-top: 5px;">163 van 172 wins</div>
+                </div>
+                <div class="stat-box" style="border-left: 4px solid #00d4ff;">
+                    <div class="value blue">74.4%</div>
+                    <div class="label">TP2 (0.58×BB)</div>
+                    <div style="font-size: 0.75em; color: #666; margin-top: 5px;">128 van 172 wins</div>
+                </div>
+                <div class="stat-box" style="border-left: 4px solid #ffd93d;">
+                    <div class="value" style="color: #ffd93d;">49.4%</div>
+                    <div class="label">TP3 (0.85×BB)</div>
+                    <div style="font-size: 0.75em; color: #666; margin-top: 5px;">85 van 172 wins</div>
+                </div>
+                <div class="stat-box" style="border-left: 4px solid #ff4757;">
+                    <div class="value" style="color: #ff9f43;">29.1%</div>
+                    <div class="label">TP4 (0.85×BB+trail)</div>
+                    <div style="font-size: 0.75em; color: #666; margin-top: 5px;">50 van 172 wins</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 20px;">
+                <div>
+                    <h3 style="color: #00d4ff; margin-bottom: 15px;">TP Progressie</h3>
+                    <table>
+                        <thead>
+                            <tr><th>TP Level</th><th>Hits</th><th>% Wins</th><th>% Alle Trades</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="highlight-row"><td>TP1 (40% pos @ 0.4×BB)</td><td>163</td><td class="pnl-positive">94.8%</td><td>80.7%</td></tr>
+                            <tr><td>TP2 (30% pos @ 0.58×BB)</td><td>128</td><td class="pnl-positive">74.4%</td><td>63.4%</td></tr>
+                            <tr><td>TP3 (20% pos @ 0.85×BB)</td><td>85</td><td>49.4%</td><td>42.1%</td></tr>
+                            <tr><td>TP4 (10% pos @ 0.85×BB+trail)</td><td>50</td><td>29.1%</td><td>24.8%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3 style="color: #00d4ff; margin-bottom: 15px;">Exit Analyse</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Exit Type</th><th>Count</th><th>%</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Alleen TP1 (daarna reversal)</td><td>35</td><td>20.3% wins</td></tr>
+                            <tr><td>TP1 + TP2</td><td>43</td><td>25.0% wins</td></tr>
+                            <tr><td>TP1 + TP2 + TP3</td><td>35</td><td>20.3% wins</td></tr>
+                            <tr class="highlight-row"><td><strong>Full Runners (alle TPs)</strong></td><td>50</td><td class="pnl-positive">29.1% wins</td></tr>
+                            <tr class="danger-row"><td>Stop Loss</td><td>30</td><td class="pnl-negative">14.9% totaal</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="insights-grid" style="margin-top: 20px;">
+                <div class="insight-card best">
+                    <h3>TP1 Performance</h3>
+                    <p>94.8% van alle winnende trades bereikt minimaal TP1. Slechts 5.2% van wins sluit eerder (breakeven door FOLLOW_TP).</p>
+                    <div class="impact">163/172 wins</div>
+                </div>
+                <div class="insight-card">
+                    <h3>Full Runners</h3>
+                    <p>29.1% van wins bereikt alle TPs. Deze trades leveren het meeste op door trailing op TP4.</p>
+                    <div class="impact">50 full runners</div>
+                </div>
+                <div class="insight-card warning">
+                    <h3>Vroege Exits</h3>
+                    <p>20.3% stopt na alleen TP1 door FOLLOW_TAKE_PROFIT. SL verplaatst naar entry na TP1, en reversal sluit rest breakeven.</p>
+                    <div class="impact">35 vroege exits</div>
+                </div>
+            </div>
+        </div>
+
         <!-- TP Level Simulatie -->
         <div class="section">
             <h2>TP Level Simulatie (MFE Analyse)</h2>
