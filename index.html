@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuadBot A/B Test - Bot6 vs Bot12 (Altrady Data)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        h1 {
+            font-size: 2.5em;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .subtitle { color: #888; font-size: 1.1em; }
+        .data-source {
+            background: rgba(0,212,255,0.1);
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .data-source strong { color: #00d4ff; }
+        .winner-banner {
+            background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,212,255,0.2));
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .winner-banner h2 { color: #00ff88; margin-bottom: 10px; font-size: 1.8em; }
+        .winner-banner p { color: #00d4ff; font-size: 1.1em; }
+        .ab-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        @media (max-width: 900px) { .ab-grid { grid-template-columns: 1fr; } }
+        .bot-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .bot-card.winner { border-color: #00ff88; }
+        .bot-card h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .bot-card.winner h2 { color: #00ff88; }
+        .bot-card h2 .badge { font-size: 0.6em; }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-box .value { font-size: 1.8em; font-weight: bold; }
+        .stat-box .label { font-size: 0.8em; color: #888; text-transform: uppercase; }
+        .stat-box .value.green { color: #00ff88; }
+        .stat-box .value.red { color: #ff4757; }
+        .stat-box .value.blue { color: #00d4ff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { background: rgba(0,212,255,0.1); color: #00d4ff; font-weight: 600; font-size: 0.8em; }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .badge.green { background: rgba(0,255,136,0.2); color: #00ff88; }
+        .badge.red { background: rgba(255,71,87,0.2); color: #ff4757; }
+        .badge.yellow { background: rgba(255,217,61,0.2); color: #ffd93d; }
+        .highlight-row { background: rgba(0,255,136,0.1) !important; }
+        .danger-row { background: rgba(255,71,87,0.1) !important; }
+        .section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+        .chart-container { position: relative; height: 250px; }
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .insight-card {
+            background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,255,136,0.1));
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #00d4ff;
+        }
+        .insight-card.best { border-left-color: #00ff88; }
+        .insight-card.warning { border-left-color: #ff4757; }
+        .insight-card h3 { color: #00ff88; margin-bottom: 10px; }
+        .insight-card.warning h3 { color: #ff4757; }
+        .insight-card p { color: #aaa; line-height: 1.5; font-size: 0.95em; }
+        .insight-card .impact { margin-top: 10px; font-size: 1.2em; font-weight: bold; color: #00d4ff; }
+        .insight-card.best .impact { color: #00ff88; }
+        footer { text-align: center; padding: 30px; color: #666; font-size: 0.9em; }
+        .comparison-table { margin-top: 20px; }
+        .comparison-table th { text-align: center; }
+        .comparison-table td { text-align: center; }
+        .pnl-positive { color: #00ff88; font-weight: bold; }
+        .pnl-negative { color: #ff4757; font-weight: bold; }
+    </style>
+</head>
+<body>
+<!-- LAST UPDATED TIMESTAMP -->
+<div style="background: #1e3a5f; color: #93c5fd; padding: 8px 16px; text-align: center; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; border-bottom: 2px solid #3b82f6;">
+  <strong>Laatst bijgewerkt:</strong> 16 december 2025 - COMPLEET: A/B test + TP Sim + MFE DCA/Exit + Signal Routing + SL + Bullish% + Change24h</div>
+
+    <div class="container">
+        <header>
+            <h1>A/B Test: Bot6 vs Bot12</h1>
+            <p class="subtitle">Bot12: 25 Nov - 14 Dec | Bot6: 3 Dec - 14 Dec (A/B test periode)</p>
+            <div class="data-source">
+                <strong>Bron:</strong> bot12-master.json (192 trades) + bot6-master.json (68 trades sinds 3 dec)
+            </div>
+        </header>
+
+        <!-- Winner Banner -->
+        <div class="winner-banner">
+            <h2>Bot12 WINT: +1,889 vs Bot6 +647</h2>
+            <p>Bot12 heeft 3x hogere winst met betere win rate (85.16% vs 76.02%)</p>
+        </div>
+
+        <!-- A/B Comparison -->
+        <div class="ab-grid">
+            <!-- Bot6 (sinds 3 dec) -->
+            <div class="bot-card">
+                <h2>Bot6 <span class="badge yellow">Sinds 3 Dec</span></h2>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="value blue">68</div>
+                        <div class="label">Posities</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value green">76.5%</div>
+                        <div class="label">Win Rate</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value red">-805</div>
+                        <div class="label">P&L</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>Metric</th><th>Waarde</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Wins</td>
+                            <td><span class="pnl-positive">52</span></td>
+                        </tr>
+                        <tr>
+                            <td>Losses</td>
+                            <td><span class="pnl-negative">16</span></td>
+                        </tr>
+                        <tr>
+                            <td>Win Rate</td>
+                            <td>76.5%</td>
+                        </tr>
+                        <tr>
+                            <td>Realized PnL</td>
+                            <td><span class="pnl-negative">-805</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; padding: 10px; background: rgba(255,217,61,0.1); border-radius: 8px;">
+                    <strong style="color: #ffd93d;">Let op:</strong> Bot6 data alleen vanaf 3 dec (A/B test start). 2 outlier trades (MBL, RESOLV) geëxcludeerd.
+                </div>
+            </div>
+
+            <!-- Bot12 -->
+            <div class="bot-card winner">
+                <h2>Bot12 <span class="badge green">WINNAAR - TP1 40%</span></h2>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="value blue">158</div>
+                        <div class="label">Posities</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value green">85.16%</div>
+                        <div class="label">Win Rate</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value green">+1,889</div>
+                        <div class="label">P&L</div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th>Metric</th><th>Waarde</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Wins</td>
+                            <td><span class="pnl-positive">137</span></td>
+                        </tr>
+                        <tr>
+                            <td>Losses</td>
+                            <td><span class="pnl-negative">21</span></td>
+                        </tr>
+                        <tr>
+                            <td>Win Rate</td>
+                            <td><span class="pnl-positive">86.70%</span></td>
+                        </tr>
+                        <tr>
+                            <td>Realized PnL</td>
+                            <td><span class="pnl-positive">+1,889.18</span></td>
+                        </tr>
+                        <tr>
+                            <td>Avg Win</td>
+                            <td><span class="pnl-positive">+47.01 (1.52%)</span></td>
+                        </tr>
+                        <tr>
+                            <td>Avg Loss</td>
+                            <td><span class="pnl-negative">-249.74 (-6.22%)</span></td>
+                        </tr>
+                        <tr>
+                            <td>Avg Duration</td>
+                            <td>0d 8h 54m</td>
+                        </tr>
+                        <tr>
+                            <td>Avg Position Size</td>
+                            <td>4,880</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="section">
+            <h2>Key Insights</h2>
+            <div class="insights-grid">
+                <div class="insight-card best">
+                    <h3>Bot12 Wint Ondanks Kleinere Posities</h3>
+                    <p>Bot12 heeft 5x kleinere posities maar 3x hogere winst door veel betere win rate (85.16% vs 76.02%).</p>
+                    <div class="impact">+1,242 meer winst</div>
+                </div>
+                <div class="insight-card best">
+                    <h3>14% Hogere Win Rate</h3>
+                    <p>Bot12 wint 137/182 trades (85.16%) vs Bot6 149/196 (76.02%). Dat is 14 procentpunten verschil!</p>
+                    <div class="impact">85.16% vs 76.02%</div>
+                </div>
+                <div class="insight-card warning">
+                    <h3>Bot6 Grotere Losses</h3>
+                    <p>Bot6 heeft meer losses (48 vs 21) ondanks grotere posities. De loss % is lager maar absolute losses wegen zwaarder.</p>
+                    <div class="impact">48 vs 21 losses</div>
+                </div>
+                <div class="insight-card">
+                    <h3>Consistency: Bot12</h3>
+                    <p>Bot12 is winstgevend met +€219 totaal, Bot6 verliest -€700. Bot12 is consistenter en pakt winst sneller.</p>
+                    <div class="impact">€919 verschil</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TP Level Simulatie -->
+        <div class="section">
+            <h2>TP Level Simulatie (MFE Analyse)</h2>
+            <p style="color: #888; margin-bottom: 20px;">163 Bot12 trades - simulatie van verschillende TP configuraties op basis van MFE data</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <!-- TP1 Hit Rates -->
+                <div>
+                    <h3 style="color: #00d4ff; margin-bottom: 15px;">TP1 Hit Rate per Level</h3>
+                    <table>
+                        <thead>
+                            <tr><th>TP1 Level</th><th>Bereikt</th><th>Hit%</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>20% BB</td><td>136</td><td class="pnl-positive">83.4%</td></tr>
+                            <tr><td>25% BB</td><td>134</td><td class="pnl-positive">82.2%</td></tr>
+                            <tr><td>30% BB</td><td>129</td><td class="pnl-positive">79.1%</td></tr>
+                            <tr><td>35% BB</td><td>129</td><td class="pnl-positive">79.1%</td></tr>
+                            <tr class="highlight-row"><td><strong>40% BB (huidig)</strong></td><td>123</td><td class="pnl-positive">75.5%</td></tr>
+                            <tr><td>50% BB</td><td>109</td><td>66.9%</td></tr>
+                            <tr><td>60% BB</td><td>95</td><td>58.3%</td></tr>
+                            <tr><td>80% BB</td><td>60</td><td class="pnl-negative">36.8%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Config Comparison -->
+                <div>
+                    <h3 style="color: #00d4ff; margin-bottom: 15px;">TP Config Vergelijking</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Config</th><th>WR</th><th>PnL%/trade</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="highlight-row"><td><strong>Huidig (40/60/80/100)</strong></td><td>73.6%</td><td class="pnl-positive">+1.04%</td></tr>
+                            <tr class="highlight-row"><td><strong>TP1-35 (35/55/75/95)</strong></td><td>76.7%</td><td class="pnl-positive">+1.04%</td></tr>
+                            <tr><td>Snel (20/40/60/80)</td><td class="pnl-positive">80.4%</td><td>+1.01%</td></tr>
+                            <tr><td>TP1-25 (25/45/65/85)</td><td>79.1%</td><td>+0.99%</td></tr>
+                            <tr><td>TP1-30 (30/50/70/90)</td><td>76.7%</td><td>+0.96%</td></tr>
+                            <tr><td>Conservatief (50/70/90/110)</td><td>65.6%</td><td>+0.84%</td></tr>
+                            <tr><td>Hoog (60/80/100/120)</td><td class="pnl-negative">57.1%</td><td>+0.75%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="insights-grid" style="margin-top: 25px;">
+                <div class="insight-card best">
+                    <h3>Twee Optimale Configs</h3>
+                    <p>Zowel 40/60/80/100 als 35/55/75/95 hebben +1.04%/trade. TP1-35 heeft hogere WR (76.7% vs 73.6%).</p>
+                    <div class="impact">+1.04%/trade</div>
+                </div>
+                <div class="insight-card">
+                    <h3>TP1-35 = Hogere Win Rate</h3>
+                    <p>35/55/75/95 heeft zelfde PnL% maar 76.7% WR vs 73.6%. Meer consistente winst, minder drawdown.</p>
+                    <div class="impact">76.7% vs 73.6% WR</div>
+                </div>
+                <div class="insight-card warning">
+                    <h3>Lagere TPs = Lagere PnL%</h3>
+                    <p>25% en 30% TP1 hebben lagere PnL% (0.96-0.99%) ondanks hogere WR. Winst per hit te klein.</p>
+                    <div class="impact">-8% PnL vs huidig</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MFE-Gestuurde DCA + Early Exit -->
+        <div class="section">
+            <h2>MFE-Gestuurde DCA + Early Exit Strategie</h2>
+            <p style="color: #888; margin-bottom: 20px;">163 Bot12 trades - dynamische bijkoop of vroege exit op basis van MFE</p>
+
+            <!-- Key Stats -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="value blue">1.03%</div>
+                    <div class="label">Baseline/trade</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value green">1.82%</div>
+                    <div class="label">Met Strategie</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value green">+76%</div>
+                    <div class="label">Verbetering</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value green">97%</div>
+                    <div class="label">DCA Success</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 20px;">
+                <!-- Strategie Logica -->
+                <div style="background: rgba(0,255,136,0.1); border-radius: 12px; padding: 20px; border: 2px solid #00ff88;">
+                    <h3 style="color: #00ff88; margin-bottom: 15px;">Strategie Logica</h3>
+                    <p style="margin-bottom: 10px;">Wanneer prijs daalt naar <strong>-0.75x BB</strong>:</p>
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; font-family: monospace;">
+                        <div style="color: #00d4ff;">IF MFE >= 0.4x BB:</div>
+                        <div style="color: #00ff88; margin-left: 20px;">→ DCA: 100% bijkoop</div>
+                        <div style="color: #00d4ff; margin-top: 10px;">ELSE:</div>
+                        <div style="color: #ff4757; margin-left: 20px;">→ EXIT: sluit positie</div>
+                    </div>
+                    <p style="margin-top: 15px; color: #888; font-size: 0.9em;">
+                        <strong>Waarom?</strong> MFE >= 0.4x BB = prijs ging eerst omhoog. Er was koopkracht, dus dip is tijdelijk.
+                    </p>
+                </div>
+
+                <!-- Top Configs -->
+                <div>
+                    <h3 style="color: #00d4ff; margin-bottom: 15px;">Top Configuraties</h3>
+                    <table>
+                        <thead>
+                            <tr><th>MFE Thresh</th><th>Check Pt</th><th>DCA%</th><th>PnL%</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="highlight-row"><td><strong>0.4x BB</strong></td><td><strong>-0.75x BB</strong></td><td class="pnl-positive">97%</td><td class="pnl-positive">+295.9%</td></tr>
+                            <tr><td>0.25x BB</td><td>-0.75x BB</td><td>89%</td><td>+293.1%</td></tr>
+                            <tr><td>0.3x BB</td><td>-0.75x BB</td><td>92%</td><td>+292.6%</td></tr>
+                            <tr><td>0.4x BB</td><td>-1x BB</td><td>94%</td><td>+256.9%</td></tr>
+                            <tr><td>0.25x BB</td><td>-1x BB</td><td>82%</td><td>+259.9%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Trade Outcomes -->
+            <h3 style="color: #00d4ff; margin: 25px 0 15px 0;">Trade Uitkomsten (163 trades)</h3>
+            <table>
+                <thead>
+                    <tr><th>Categorie</th><th>Trades</th><th>Actie</th><th>Resultaat</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Checkpoint niet bereikt</td>
+                        <td>101</td>
+                        <td>Normaal</td>
+                        <td>98W / 3L</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>MFE >= 0.4x BB</strong></td>
+                        <td>33</td>
+                        <td><span class="pnl-positive">DCA</span></td>
+                        <td><span class="pnl-positive">32W / 1L (97%)</span></td>
+                    </tr>
+                    <tr>
+                        <td>MFE < 0.4x BB</td>
+                        <td>29</td>
+                        <td><span class="pnl-negative">Early Exit</span></td>
+                        <td>18 losses vermeden, 11 wins gemist</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="insights-grid" style="margin-top: 25px;">
+                <div class="insight-card best">
+                    <h3>97% DCA Success Rate</h3>
+                    <p>32 van 33 DCA trades winnen. MFE >= 0.4x BB is extreem betrouwbare indicator voor recovery.</p>
+                    <div class="impact">32/33 wins</div>
+                </div>
+                <div class="insight-card best">
+                    <h3>+76% PnL Verbetering</h3>
+                    <p>Van 1.03%/trade naar 1.82%/trade. Totaal PnL stijgt van 168% naar 296%.</p>
+                    <div class="impact">1.82%/trade</div>
+                </div>
+                <div class="insight-card">
+                    <h3>Early Exit: Break-even</h3>
+                    <p>18 SL losses vermeden (+62%), 11 wins gemist (-66%). Netto ~0, maar DCA winst is enorm.</p>
+                    <div class="impact">±0% netto</div>
+                </div>
+            </div>
+
+            <!-- Stap-voor-Stap Uitleg -->
+            <h3 style="color: #00d4ff; margin: 35px 0 20px 0;">📚 Stap-voor-Stap Uitleg</h3>
+
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 25px;">
+                <!-- Stap 1 -->
+                <div style="background: rgba(0,212,255,0.1); border-radius: 12px; padding: 15px; border: 2px solid #00d4ff; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">1️⃣</div>
+                    <h4 style="color: #00d4ff; margin-bottom: 8px;">Trade Opent</h4>
+                    <p style="color: #ccc; font-size: 0.85em;">Entry op $100<br>BB width = 2%<br>SL = -4%</p>
+                </div>
+                <!-- Stap 2 -->
+                <div style="background: rgba(0,212,255,0.1); border-radius: 12px; padding: 15px; border: 2px solid #00d4ff; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">2️⃣</div>
+                    <h4 style="color: #00d4ff; margin-bottom: 8px;">Prijs Beweegt</h4>
+                    <p style="color: #ccc; font-size: 0.85em;">MFE = hoogste punt<br>MAE = laagste punt<br>Beide getracked</p>
+                </div>
+                <!-- Stap 3 -->
+                <div style="background: rgba(255,215,0,0.1); border-radius: 12px; padding: 15px; border: 2px solid #ffd700; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">3️⃣</div>
+                    <h4 style="color: #ffd700; margin-bottom: 8px;">Checkpoint</h4>
+                    <p style="color: #ccc; font-size: 0.85em;">MAE bereikt<br><strong>-0.75× BB</strong><br>(-1.5% bij 2% BB)</p>
+                </div>
+                <!-- Stap 4a -->
+                <div style="background: rgba(0,255,136,0.1); border-radius: 12px; padding: 15px; border: 2px solid #00ff88; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">4️⃣✅</div>
+                    <h4 style="color: #00ff88; margin-bottom: 8px;">MFE >= 0.4× BB</h4>
+                    <p style="color: #ccc; font-size: 0.85em;">Prijs ging eerst ↑<br><strong>→ DCA 100%</strong><br>97% success rate</p>
+                </div>
+                <!-- Stap 4b -->
+                <div style="background: rgba(255,71,87,0.1); border-radius: 12px; padding: 15px; border: 2px solid #ff4757; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">4️⃣❌</div>
+                    <h4 style="color: #ff4757; margin-bottom: 8px;">MFE < 0.4× BB</h4>
+                    <p style="color: #ccc; font-size: 0.85em;">Prijs ging direct ↓<br><strong>→ Early Exit</strong><br>Voorkom SL</p>
+                </div>
+            </div>
+
+            <!-- Visuele Voorbeelden -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Voorbeeld DCA -->
+                <div style="background: rgba(0,255,136,0.05); border-radius: 12px; padding: 20px; border: 1px solid #00ff88;">
+                    <h4 style="color: #00ff88; margin-bottom: 15px;">✅ Scenario A: DCA (97% wint)</h4>
+                    <div style="background: #0a0a0a; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px;">
+                        <div style="color: #888;">Entry $100</div>
+                        <div style="color: #00ff88;">↗ Prijs naar $101.20 (MFE +1.2%)</div>
+                        <div style="color: #ff4757;">↘ Prijs naar $98.50 (MAE -1.5%)</div>
+                        <div style="color: #ffd700; margin-top: 10px;">⚡ CHECKPOINT BEREIKT</div>
+                        <div style="color: #ccc; margin-top: 5px;">MFE 1.2% >= threshold 0.8%</div>
+                        <div style="color: #00ff88; font-weight: bold; margin-top: 10px;">→ DCA: +100% bijkoop!</div>
+                    </div>
+                </div>
+                <!-- Voorbeeld Exit -->
+                <div style="background: rgba(255,71,87,0.05); border-radius: 12px; padding: 20px; border: 1px solid #ff4757;">
+                    <h4 style="color: #ff4757; margin-bottom: 15px;">❌ Scenario B: Early Exit</h4>
+                    <div style="background: #0a0a0a; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 13px;">
+                        <div style="color: #888;">Entry $100</div>
+                        <div style="color: #00ff88;">↗ Prijs naar $100.30 (MFE +0.3%)</div>
+                        <div style="color: #ff4757;">↘ Prijs naar $98.50 (MAE -1.5%)</div>
+                        <div style="color: #ffd700; margin-top: 10px;">⚡ CHECKPOINT BEREIKT</div>
+                        <div style="color: #ccc; margin-top: 5px;">MFE 0.3% < threshold 0.8%</div>
+                        <div style="color: #ff4757; font-weight: bold; margin-top: 10px;">→ EXIT: Sluit @ -1.5% (ipv -4% SL)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kernlogica -->
+            <div style="background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,255,136,0.1)); border-radius: 12px; padding: 20px; margin-top: 25px; border: 2px solid #00d4ff;">
+                <h4 style="color: #00d4ff; margin-bottom: 15px; text-align: center;">🧠 Kernlogica: Waarom MFE werkt</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">📈</div>
+                        <p style="color: #00ff88;"><strong>Hoge MFE = Koopkracht</strong></p>
+                        <p style="color: #ccc; font-size: 0.9em;">Prijs ging eerst omhoog → er waren kopers → dip is waarschijnlijk tijdelijk → DCA loont</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">📉</div>
+                        <p style="color: #ff4757;"><strong>Lage MFE = Geen Koopkracht</strong></p>
+                        <p style="color: #ccc; font-size: 0.9em;">Prijs ging nooit echt omhoog → alleen verkopers → trend is bearish → exit snel</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signal Routing -->
+        <div class="section">
+            <h2>🔀 Signal Routing: Spot → Futures</h2>
+            <p style="color: #888; margin-bottom: 20px;">CC Scanner stuurt SPOT signalen - QuadBot routeert automatisch naar Binance Futures</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <!-- Exchange Mapping -->
+                <div>
+                    <h3 style="color: #00d4ff; margin-bottom: 15px;">Exchange Mapping</h3>
+                    <table>
+                        <thead>
+                            <tr><th>CC Scanner</th><th>→</th><th>Altrady API</th><th>Resultaat</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>BINA</td><td>→</td><td class="pnl-positive">BIFU</td><td>Binance Futures</td></tr>
+                            <tr><td>BINANCE</td><td>→</td><td class="pnl-positive">BIFU</td><td>Binance Futures</td></tr>
+                            <tr><td>BYBT</td><td>→</td><td class="pnl-positive">BIFU</td><td>Binance Futures</td></tr>
+                            <tr><td>OKEX</td><td>→</td><td class="pnl-positive">BIFU</td><td>Binance Futures</td></tr>
+                            <tr><td>OKX</td><td>→</td><td class="pnl-positive">BIFU</td><td>Binance Futures</td></tr>
+                            <tr><td>(onbekend)</td><td>→</td><td class="pnl-positive">BIFU</td><td>Binance Futures</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Waarom -->
+                <div style="background: rgba(0,212,255,0.1); border-radius: 12px; padding: 20px; border: 2px solid #00d4ff;">
+                    <h3 style="color: #00d4ff; margin-bottom: 15px;">Waarom deze routing?</h3>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #00ff88;">CC Scanner:</strong>
+                        <p style="color: #ccc; margin: 5px 0;">Stuurt signalen met SPOT exchange codes (BINA, BYBT, etc.)</p>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #00ff88;">Altrady API:</strong>
+                        <p style="color: #ccc; margin: 5px 0;">Accepteert specifieke codes: BIFU (Binance Futures), BYBIF (Bybit Futures)</p>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #00ff88;">QuadBot:</strong>
+                        <p style="color: #ccc; margin: 5px 0;">Mapt alle signalen naar BIFU omdat we Binance Futures account gebruiken</p>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px;">
+                        Log: <span style="color: #ffd700;">[BYBT→BIFU]</span> toont de mapping
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SL Optimalisatie (MAE/MFE) -->
+        <div class="section">
+            <h2>SL Optimalisatie (MAE/MFE Analyse)</h2>
+            <p style="color: #888; margin-bottom: 20px;">176 Bot12 trades met Binance MAE/MFE data - basis voor dynamic SL op Bot6</p>
+
+            <!-- Key Stats -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="value blue">176</div>
+                    <div class="label">Trades</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value red">-2.53%</div>
+                    <div class="label">Gem. MAE</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value green">+2.23%</div>
+                    <div class="label">Gem. MFE</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value green">93.2%</div>
+                    <div class="label">Bereikt BE</div>
+                </div>
+            </div>
+
+            <table style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>BB Breedte</th>
+                        <th>Trades</th>
+                        <th>Gem. MAE</th>
+                        <th>2.0x BB</th>
+                        <th>2.5x BB</th>
+                        <th>Aanbevolen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>&lt;2% (Narrow)</strong></td>
+                        <td>44</td>
+                        <td>-1.62%</td>
+                        <td>81.8%</td>
+                        <td><span class="pnl-positive">95.5%</span></td>
+                        <td><span class="pnl-positive">3.25x BB</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>2-4% (Medium)</strong></td>
+                        <td>49</td>
+                        <td>-2.16%</td>
+                        <td><span class="pnl-positive">89.8%</span></td>
+                        <td>95.9%</td>
+                        <td><span class="pnl-positive">2.0x BB</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>&gt;4% (Wide)</strong></td>
+                        <td>70</td>
+                        <td>-2.81%</td>
+                        <td><span class="pnl-positive">95.7%</span></td>
+                        <td>100%</td>
+                        <td><span class="pnl-positive">1.5x BB</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="insights-grid" style="margin-top: 25px;">
+                <div class="insight-card best">
+                    <h3>Dynamic SL Geimplementeerd op Bot6</h3>
+                    <p>Narrow BB: 3.25x, Medium BB: 2.0x, Wide BB: 1.5x. Past SL aan op volatiliteit.</p>
+                    <div class="impact">+47% verwacht</div>
+                </div>
+                <div class="insight-card">
+                    <h3>MAE Distributie</h3>
+                    <p>60.8% van trades heeft MAE beter dan -2%. Meeste trades bewegen niet ver tegen je in.</p>
+                    <div class="impact">107/176 trades</div>
+                </div>
+                <div class="insight-card warning">
+                    <h3>SL Trades: -7.03% MAE</h3>
+                    <p>Trades die SL hitten hadden gemiddeld -7.03% MAE. Ver voorbij normale beweging.</p>
+                    <div class="impact">23 SL trades</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bullish % Analysis (Bearish Filter) -->
+        <div class="section">
+            <h2>Bullish % Analyse (Bearish Filter)</h2>
+            <p style="color: #888; margin-bottom: 20px;">192 Bot12 trades geanalyseerd op market sentiment. Basis voor Bot6 bearish filter.</p>
+
+            <table style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>Bullish %</th>
+                        <th>Trades</th>
+                        <th>Wins</th>
+                        <th>Win Rate</th>
+                        <th>Total PnL</th>
+                        <th>Avg PnL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="highlight-row">
+                        <td>0-10%</td>
+                        <td>91</td>
+                        <td>80</td>
+                        <td><span class="pnl-positive">87.9%</span></td>
+                        <td><span class="pnl-positive">+$2,950</span></td>
+                        <td><span class="pnl-positive">+$32</span></td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td><strong>10-15%</strong></td>
+                        <td>12</td>
+                        <td>6</td>
+                        <td><span class="pnl-negative">50.0%</span></td>
+                        <td><span class="pnl-negative">-$1,277</span></td>
+                        <td><span class="pnl-negative">-$106</span></td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td>15-30%</td>
+                        <td>23</td>
+                        <td>21</td>
+                        <td><span class="pnl-positive">91.3%</span></td>
+                        <td><span class="pnl-positive">+$389</span></td>
+                        <td>+$17</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td>50-70%</td>
+                        <td>32</td>
+                        <td>29</td>
+                        <td><span class="pnl-positive">90.6%</span></td>
+                        <td><span class="pnl-positive">+$731</span></td>
+                        <td>+$23</td>
+                    </tr>
+                    <tr>
+                        <td>70-85%</td>
+                        <td>7</td>
+                        <td>5</td>
+                        <td>71.4%</td>
+                        <td><span class="pnl-negative">-$302</span></td>
+                        <td><span class="pnl-negative">-$43</span></td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td>85-100%</td>
+                        <td>27</td>
+                        <td>23</td>
+                        <td><span class="pnl-positive">85.2%</span></td>
+                        <td><span class="pnl-positive">+$493</span></td>
+                        <td>+$18</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="insights-grid" style="margin-top: 25px;">
+                <div class="insight-card warning">
+                    <h3>Filter Geimplementeerd: 10-15%</h3>
+                    <p>Bot6 skipt nu trades wanneer bullish% in 10-15% range. 50% WR en -$106 gem. verlies per trade is onacceptabel.</p>
+                    <div class="impact">-$1,277 vermeden</div>
+                </div>
+                <div class="insight-card best">
+                    <h3>Beste Zones: 0-10% en 15-70%</h3>
+                    <p>Extreme bearish (0-10%) en midrange sentiment presteren uitstekend met 88-91% win rate.</p>
+                    <div class="impact">+$4,070 totaal</div>
+                </div>
+                <div class="insight-card">
+                    <h3>Gecombineerd met Dynamic SL</h3>
+                    <p>Bot6 combineert nu bearish filter (+$1,277) met dynamic SL (+47% estimated). Verwachte verbetering: +70%.</p>
+                    <div class="impact">+$2,084 combined</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change24h Analysis -->
+        <div class="section">
+            <h2>Change24h vs Trade Performance</h2>
+            <p style="color: #888; margin-bottom: 20px;">Analyse van 156 Bot12 trades gematcht met 24h prijsverandering van de coin</p>
+
+            <!-- Key Stats -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="value blue">0.136</div>
+                    <div class="label">Correlatie</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value green">-4.5%</div>
+                    <div class="label">Gem. WINS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value red">-7.1%</div>
+                    <div class="label">Gem. LOSSES</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value blue">156</div>
+                    <div class="label">Trades</div>
+                </div>
+            </div>
+
+            <table style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>Change24h Range</th>
+                        <th>Trades</th>
+                        <th>Wins</th>
+                        <th>Win Rate</th>
+                        <th>Total PnL</th>
+                        <th>Avg PnL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="highlight-row">
+                        <td>&lt; -15%</td>
+                        <td>8</td>
+                        <td>7</td>
+                        <td><span class="pnl-positive">87.5%</span></td>
+                        <td><span class="pnl-positive">+$62</span></td>
+                        <td>+$8</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td><strong>-15% tot -10%</strong></td>
+                        <td>17</td>
+                        <td>13</td>
+                        <td>76.5%</td>
+                        <td><span class="pnl-negative">-$448</span></td>
+                        <td><span class="pnl-negative">-$26</span></td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td><strong>-10% tot -5%</strong></td>
+                        <td>50</td>
+                        <td>39</td>
+                        <td>78.0%</td>
+                        <td><span class="pnl-negative">-$288</span></td>
+                        <td><span class="pnl-negative">-$6</span></td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td>-5% tot 0%</td>
+                        <td>61</td>
+                        <td>55</td>
+                        <td><span class="pnl-positive">90.2%</span></td>
+                        <td><span class="pnl-positive">+$1,938</span></td>
+                        <td><span class="pnl-positive">+$32</span></td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td>0% tot +5%</td>
+                        <td>10</td>
+                        <td>9</td>
+                        <td><span class="pnl-positive">90.0%</span></td>
+                        <td><span class="pnl-positive">+$187</span></td>
+                        <td>+$19</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td>&gt; +5%</td>
+                        <td>10</td>
+                        <td>9</td>
+                        <td><span class="pnl-positive">90.0%</span></td>
+                        <td><span class="pnl-positive">+$379</span></td>
+                        <td><span class="pnl-positive">+$38</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="insights-grid" style="margin-top: 25px;">
+                <div class="insight-card warning">
+                    <h3>Probleem Zone: -15% tot -5%</h3>
+                    <p>67 trades in deze range, totaal <strong>-$736 verlies</strong>. Win rate lijkt OK (76-78%) maar losses zijn groter.</p>
+                    <div class="impact">-$736 totaal verlies</div>
+                </div>
+                <div class="insight-card best">
+                    <h3>Best Performance: -5% tot +5%</h3>
+                    <p>71 trades met 90% win rate en +$2,125 winst. Coins die stabiel zijn (kleine 24h change) presteren het best.</p>
+                    <div class="impact">+$2,125 winst</div>
+                </div>
+                <div class="insight-card">
+                    <h3>Extremen OK: &lt;-15% en &gt;+5%</h3>
+                    <p>Verrassend: extreme dumps (&lt;-15%) hebben 87.5% WR. Mogelijk al uitgebodemd = bounce.</p>
+                    <div class="impact">18 trades, +$441</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="section">
+            <h2>Aanbevelingen</h2>
+            <div class="insights-grid">
+                <div class="insight-card best">
+                    <h3>1. Focus op Bot12 Strategie</h3>
+                    <p>TP1 40% (Bot12) presteert beter dan TP1 20%/50% (Bot6). Hogere win rate compenseert kleinere winsten per trade.</p>
+                    <div class="impact">85.16% win rate</div>
+                </div>
+                <div class="insight-card best">
+                    <h3>2. Vergroot Bot12 Posities</h3>
+                    <p>Bot12 heeft kleinere posities (4,880 vs 24,570). Met grotere posities zou de winst nog hoger zijn.</p>
+                    <div class="impact">5x groeipotentieel</div>
+                </div>
+                <div class="insight-card">
+                    <h3>3. Analyseer Bot6 Losses</h3>
+                    <p>Bot6 heeft 48 losses vs 21. Onderzoek welke WGHM levels of coins de meeste losses veroorzaken.</p>
+                    <div class="impact">Reduceer losses</div>
+                </div>
+                <div class="insight-card warning">
+                    <h3>4. Kritieke Trades Analyseren</h3>
+                    <p>GIGGLE, ZEC, LTC trades waar Bot6 SL hit maar Bot12 TP pakte. TP1 40% voorkomt reversals.</p>
+                    <div class="impact">TP timing cruciaal</div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>QuadBot A/B Test Dashboard | Data: 15 Dec 2025</p>
+            <p style="margin-top: 10px; color: #00ff88;">Bot12 WINT: +€219 vs -€700 | Win Rate: 83.3% vs 76.5% | Verschil: €919</p>
+        </footer>
+    </div>
+
+</body>
+</html>
